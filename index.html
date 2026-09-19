@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spider-Man: Web-Shooter AR Simulator</title>
+  <meta name="description" content="Shoot webs from your own hands in real-time using your webcam and gesture detection!">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- MediaPipe Hands & Camera Utils CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Spider-Sense Danger Warning Vignette -->
+  <div id="spiderSenseVignette" class="spider-sense-overlay"></div>
+
+  <!-- Main Game Container -->
+  <div class="game-container">
+    
+    <!-- Hidden / Background Camera Video Element -->
+    <video id="webcamVideo" autoplay playsinline muted></video>
+
+    <!-- Main AR Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Stark Tech Web-Shooter HUD Overlay -->
+    <header class="hud-top">
+      <div class="hud-brand">
+        <div class="spider-logo-icon">🕷️</div>
+        <div class="brand-text">
+          <span class="hud-title">STARK-TECH AR</span>
+          <span class="hud-sub">WEB-SHOOTER V4.2</span>
+        </div>
+      </div>
+
+      <div class="hud-stats">
+        <div class="stat-box">
+          <span class="stat-label">SCORE</span>
+          <span id="scoreDisplay" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">HIGH SCORE</span>
+          <span id="highScoreDisplay" class="stat-value">0</span>
+        </div>
+        <div class="stat-box combo-box">
+          <span class="stat-label">COMBO</span>
+          <span id="comboDisplay" class="stat-value">x1</span>
+        </div>
+      </div>
+
+      <div class="hud-fluid">
+        <div class="fluid-header">
+          <span class="stat-label">WEB FLUID</span>
+          <span id="fluidPercent" class="stat-label-val">100%</span>
+        </div>
+        <div class="fluid-meter-container">
+          <div id="fluidBar" class="fluid-bar"></div>
+        </div>
+        <span id="reloadPrompt" class="reload-hint hidden">RELOAD READY! (CLICK OR CLENCH FIST)</span>
+      </div>
+    </header>
+
+    <!-- Center Crosshairs / Hand Status Tracker -->
+    <div id="gesturePrompt" class="gesture-indicator">
+      <div class="gesture-card">
+        <div class="gesture-emoji">🤟</div>
+        <div class="gesture-info">
+          <div class="gesture-title">SPIDER-MAN GESTURE</div>
+          <div class="gesture-desc">Curl middle & ring fingers down, extend thumb, index & pinky!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Web Fluid Depleted Alert Banner -->
+    <div id="emptyCartridgeBanner" class="alert-banner hidden">
+      <div class="alert-content">
+        ⚠️ FLUID DEPLETED! PRESS [R] OR TAP SCREEN TO RELOAD
+      </div>
+    </div>
+
+    <!-- Comic Onomatopoeia Popups Container -->
+    <div id="comicPopupLayer" class="comic-layer"></div>
+
+    <!-- Bottom HUD Controls & Web Selector -->
+    <footer class="hud-bottom">
+      <div class="web-modes-panel">
+        <span class="panel-label">GADGET SELECTION:</span>
+        <div class="web-mode-buttons">
+          <button class="mode-btn active" data-mode="classic" id="btnModeClassic">
+            <span class="mode-icon">🕸️</span>
+            <span class="mode-name">Classic Web</span>
+          </button>
+          <button class="mode-btn" data-mode="impact" id="btnModeImpact">
+            <span class="mode-icon">💥</span>
+            <span class="mode-name">Impact Web</span>
+          </button>
+          <button class="mode-btn" data-mode="taser" id="btnModeTaser">
+            <span class="mode-icon">⚡</span>
+            <span class="mode-name">Venom Taser</span>
+          </button>
+          <button class="mode-btn" data-mode="bomb" id="btnModeBomb">
+            <span class="mode-icon">💣</span>
+            <span class="mode-name">Web Grenade</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="btnReload" class="hud-action-btn" title="Reload Web Fluid (Key: R)">
+          🔄 RELOAD
+        </button>
+        <button id="btnSound" class="hud-action-btn" title="Toggle Sound">
+          🔊 SOUND: ON
+        </button>
+        <button id="btnHowToPlay" class="hud-action-btn primary" title="View Instructions">
+          ❓ HOW TO PLAY
+        </button>
+      </div>
+    </footer>
+
+    <!-- Camera Loading / Permission Screen -->
+    <div id="cameraSetupScreen" class="overlay-modal active">
+      <div class="modal-card">
+        <div class="modal-spidey-badge">🕷️</div>
+        <h2>SPIDER-MAN AR INITIALIZATION</h2>
+        <p>Step into Peter Parker's shoes. Allow camera access to activate real-time AI hand-gesture web shooting!</p>
+        
+        <div class="permission-preview">
+          <div class="step-item">
+            <span class="step-num">1</span>
+            <span>Enable your webcam when prompted.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">2</span>
+            <span>Hold your hand up in front of the lens.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">3</span>
+            <span>Strike the iconic <strong>🤟 Spider-Man pose</strong> to fire webs!</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btnStartCamera" class="btn-primary-spidey">
+            🕸️ ACTIVATE WEB-SHOOTERS
+          </button>
+          <button id="btnPlayWithoutCam" class="btn-secondary-spidey">
+            🖱️ PLAY WITH MOUSE / TOUCH
+          </button>
+        </div>
+        <p class="privacy-note">🔒 100% Private & Local: Video is processed right inside your browser. No video is ever sent to any server.</p>
+      </div>
+    </div>
+
+    <!-- How To Play & Gesture Guide Modal -->
+    <div id="howToPlayModal" class="overlay-modal hidden">
+      <div class="modal-card wide">
+        <button id="btnCloseHowToPlay" class="modal-close-btn">&times;</button>
+        <h2>WEB-SHOOTER PROTOCOLS & GESTURES</h2>
+
+        <div class="guide-grid">
+          <div class="guide-card">
+            <div class="guide-art">🤟</div>
+            <h3>The Iconic "THWIP!"</h3>
+            <p>Curl your <strong>middle & ring fingers</strong> to touch your palm, keeping your <strong>index, pinky & thumb extended</strong>.</p>
+            <span class="guide-tag">Instant Web Blast</span>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-art">🎯</div>
+            <h3>Aim & Trap Villains</h3>
+            <p>Move your wrist to guide the crosshair. Green Goblin, Pumpkin Bombs, Doc Ock arms and Symbiotes will attack!</p>
+            <span class="guide-tag">+100 to +500 Pts</span>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-art">🔄</div>
+            <h3>Reload Cartridge</h3>
+            <p>Running low on fluid? Clench your fist ✊ for 1 second, press <strong>[R]</strong>, or tap the screen to swap cartridges!</p>
+            <span class="guide-tag">Instant Refill</span>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-art">⚡</div>
+            <h3>Switch Gadgets</h3>
+            <p>Use gadgets at the bottom or keys <strong>[1-4]</strong> to fire Venom Tasers, Heavy Impact Webbing, or Web Grenades!</p>
+            <span class="guide-tag">Multi-Web Modes</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btnGotIt" class="btn-primary-spidey">
+            LET'S GO WEBSLINGING! 🕷️
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
