@@ -4,10 +4,20 @@ An interactive Augmented Reality web application that turns your webcam into Pet
 
 ---
 
-## 🚀 Instant Netlify Hosting (Drag & Drop)
+## 🌐 Live Website
 
-You can host this website on Netlify for **free** in under 30 seconds with **zero command line or Git setup**:
+### 🚀 **Play Now Live:** [https://lspider.netlify.app/](https://lspider.netlify.app/)
 
+> [!TIP]
+> Experience real-time AI hand-tracking web-shooting directly in your browser with webcam enabled!
+
+---
+
+## 🚀 Netlify Deployment & Hosting
+
+The website is actively deployed at **[lspider.netlify.app](https://lspider.netlify.app/)**.
+
+If you ever want to update or re-upload your files:
 ### 👉 **[Click Here to Go to Netlify Drop (app.netlify.com/drop)](https://app.netlify.com/drop)**
 
 ### 📦 Quick 3-Step Hosting Instructions:
